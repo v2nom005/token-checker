@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Discord Token Checker Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Pretendard',sans-serif;background:linear-gradient(135deg,#0f0f14,#1a1b21);min-height:100vh;padding:24px 16px;color:#fff}
+.box{max-width:900px;margin:0 auto;background:#232428;border:1px solid #3a3c42;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+h1{font-size:22px;font-weight:800;margin-bottom:4px}
+.sub{color:#a3a6ad;font-size:13px;margin-bottom:16px}
+.warn{background:rgba(237,66,69,.1);border-left:4px solid #ed4245;padding:10px 14px;border-radius:8px;font-size:12px;color:#f2b8b9;margin-bottom:16px}
+textarea{width:100%;min-height:140px;background:#16171b;border:1.5px solid #3a3c42;border-radius:10px;padding:14px;color:#e8e9ec;font-family:Consolas,monospace;font-size:13px;resize:vertical;outline:none}
+textarea:focus{border-color:#5865F2}
+.ctrl{display:flex;gap:10px;margin:14px 0}
+button{border:none;padding:11px 20px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;color:#fff}
+button:disabled{opacity:.45;cursor:not-allowed}
+#checkBtn{background:#5865F2}
+#checkBtn:hover:not(:disabled){background:#4752c4}
+#clearBtn{background:#4e5058}
+#clearBtn:hover:not(:disabled){background:#5d6069}
+.prog{height:4px;background:#16171b;border-radius:4px;overflow:hidden;display:none;margin-top:8px}
+.prog.on{display:block}
+.prog>div{height:100%;width:0;background:#5865F2;transition:width .3s}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.st{background:#2b2d31;border:1px solid #3a3c42;border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.st::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.st.v::before{background:#23a55a}
+.st.l::before{background:#f0b232}
+.st.i::before{background:#ed4245}
+.st .lb{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#a3a6ad;margin-bottom:5px}
+.st .val{font-size:24px;font-weight:800}
+.st.v .val{color:#23a55a}
+.st.l .val{color:#f0b232}
+.st.i .val{color:#ed4245}
+.copies{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.cbtn{padding:11px 14px;border-radius:9px;font-size:12.5px;font-weight:700;background:#2b2d31;border:1.5px solid #3a3c42;color:#d8d9dd;cursor:pointer;font-family:inherit;transition:.2s}
+.cbtn:hover:not(:disabled){transform:translateY(-2px)}
+.cbtn.v{border-color:rgba(35,165,90,.4);color:#7ee2a8}
+.cbtn.v:hover:not(:disabled){background:rgba(35,165,90,.12);border-color:#23a55a}
+.cbtn.l{border-color:rgba(240,178,50,.4);color:#f5cd7a}
+.cbtn.l:hover:not(:disabled){background:rgba(240,178,50,.12);border-color:#f0b232}
+.cbtn.i{border-color:rgba(237,66,69,.4);color:#f28a8c}
+.cbtn.i:hover:not(:disabled){background:rgba(237,66,69,.12);border-color:#ed4245}
+.cbtn.done{background:rgba(35,165,90,.2)!important;border-color:#23a55a!important;color:#7ee2a8!important}
+.rhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #3a3c42}
+.rhdr h2{font-size:13px;color:#a3a6ad;text-transform:uppercase;letter-spacing:.5px}
+.tabs{display:flex;gap:4px;background:#16171b;padding:3px;border-radius:7px}
+.tab{padding:5px 12px;border-radius:5px;font-size:11.5px;font-weight:600;background:transparent;border:none;color:#a3a6ad;cursor:pointer;font-family:inherit}
+.tab.on{background:#2b2d31;color:#fff}
+#results{display:flex;flex-direction:column;gap:9px}
+.item{background:#1a1b21;border:1px solid #3a3c42;border-left-width:4px;border-radius:10px;padding:12px 14px;animation:sl .3s ease}
+@keyframes sl{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.item.valid{border-left-color:#23a55a;background:linear-gradient(90deg,rgba(35,165,90,.07),transparent 30%)}
+.item.locked{border-left-color:#f0b232;background:linear-gradient(90deg,rgba(240,178,50,.07),transparent 30%)}
+.item.invalid{border-left-color:#ed4245;background:linear-gradient(90deg,rgba(237,66,69,.07),transparent 30%)}
+.item.checking{border-left-color:#5865F2}
+.ir{display:flex;gap:12px;align-items:center}
+.av{width:44px;height:44px;border-radius:50%;background:#2b2d31;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;background-size:cover;background-position:center;border:2px solid rgba(255,255,255,.08)}
+.inf{flex:1;min-width:0}
+.nm{font-weight:700;font-size:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:3px}
+.dt{font-size:11.5px;color:#a3a6ad;font-family:Consolas,monospace;word-break:break-all;line-height:1.4}
+.bdg{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:800;letter-spacing:.5px}
+.bdg.bot{background:#5865F2}
+.bdg.nitro{background:linear-gradient(135deg,#ff73fa,#a56bff)}
+.bdg.staff{background:#ed4245}
+.bdg.early{background:#f0b232;color:#000}
+.si{font-size:19px;flex-shrink:0}
+.spin{width:18px;height:18px;border:2.5px solid #3f4147;border-top-color:#5865F2;border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px 20px;color:#a3a6ad;font-size:13px}
+.empty .ic{font-size:30px;margin-bottom:8px;opacity:.4}
+.toggle{background:none;border:none;color:#5865F2;font-size:12px;font-weight:600;cursor:pointer;padding:6px 0;font-family:inherit;text-align:left;margin-top:6px}
+.toggle:hover{text-decoration:underline}
+.detail{margin-top:12px;padding-top:12px;border-top:1px dashed #3a3c42;display:none}
+.detail.on{display:block}
+.dgrid{display:grid;grid-template-columns:1fr;gap:6px}
+.drow{display:grid;grid-template-columns:130px 1fr;gap:10px;font-size:12.5px;padding:6px 10px;background:#16171b;border-radius:6px;align-items:start}
+.drow .k{color:#8a8d94;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px}
+.drow .v{color:#e8e9ec;font-family:Consolas,monospace;word-break:break-all;line-height:1.5}
+.drow .v .hl{color:#5865F2;font-weight:700}
+.drow .v .ok{color:#23a55a;font-weight:700}
+.drow .v .no{color:#ed4245;font-weight:700}
+.drow .v .ni{background:linear-gradient(90deg,#ff73fa,#a56bff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#232428;border:1px solid #3a3c42;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;z-index:9999;pointer-events:none}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:rgba(35,165,90,.6)}
+#toast.err{border-color:rgba(237,66,69,.6)}
+@media(max-width:640px){.stats,.copies{grid-template-columns:1fr}.ctrl{flex-direction:column}.ctrl button{width:100%}.drow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>🔍 Discord Token Checker Pro</h1>
+  <p class="sub">토큰을 한 줄에 하나씩 · Ctrl+Enter 실행 · 유효 토큰 클릭 시 상세정보 펼침</p>
+  <div class="warn">⚠️ 본인 소유 토큰만 검사하세요. 타인 토큰은 ToS 위반입니다.</div>
+  <textarea id="tokenInput" placeholder="여기에 토큰 입력 (한 줄에 하나)" spellcheck="false" autocomplete="off"></textarea>
+  <div class="ctrl">
+    <button id="checkBtn">▶ 검사 시작</button>
+    <button id="clearBtn">🗑 초기화</button>
+  </div>
+  <div class="prog" id="prog"><div id="progFill"></div></div>
+  <div class="stats">
+    <div class="st v"><div class="lb">유효 Valid</div><div class="val" id="cV">0</div></div>
+    <div class="st l"><div class="lb">잠김 Locked</div><div class="val" id="cL">0</div></div>
+    <div class="st i"><div class="lb">무효 Invalid</div><div class="val" id="cI">0</div></div>
+  </div>
+  <div class="copies">
+    <button class="cbtn v" id="cpV" disabled>📋 유효 토큰 복사</button>
+    <button class="cbtn l" id="cpL" disabled>📋 잠긴 토큰 복사</button>
+    <button class="cbtn i" id="cpI" disabled>📋 무효 토큰 복사</button>
+  </div>
+  <div class="rhdr">
+    <h2>검사 결과</h2>
+    <div class="tabs">
+      <button class="tab on" data-f="all">전체</button>
+      <button class="tab" data-f="valid">유효</button>
+      <button class="tab" data-f="locked">잠김</button>
+      <button class="tab" data-f="invalid">무효</button>
+    </div>
+  </div>
+  <div id="results"><div class="empty"><div class="ic">📭</div><div>아직 검사한 토큰이 없습니다</div></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+(function(){
+  var API='https://discord.com/api/v10';
+  var DELAY=700;
+  var $=function(id){return document.getElementById(id)};
+  var inp=$('tokenInput'),btn=$('checkBtn'),clr=$('clearBtn'),res=$('results');
+  var prog=$('prog'),pf=$('progFill'),tst=$('toast');
+  var cp={v:$('cpV'),l:$('cpL'),i:$('cpI')};
+  var buck={valid:[],locked:[],invalid:[]};
+  var items=[],busy=false,filter='all';
+
+  function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+  function esc(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+  function mask(t){return t.length<=24?t:t.slice(0,14)+'••••'+t.slice(-8)}
+  function toast(m,type){tst.textContent=m;tst.className='on '+(type||'ok');clearTimeout(toast._t);toast._t=setTimeout(function(){tst.className=''},2200)}
+
+  // ID → 생성시간 (Snowflake)
+  function snowflakeToDate(id){
+    try{
+      var ts=(BigInt(id)>>22n)+1420070400000n;
+      return new Date(Number(ts));
+    }catch(e){return null}
+  }
+  function fmtDate(d){
+    if(!d)return'N/A';
+    var p=function(n){return n<10?'0'+n:n};
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+  }
+  function timeAgo(d){
+    if(!d)return'';
+    var s=Math.floor((Date.now()-d.getTime())/1000);
+    if(s<60)return s+'초 전';
+    if(s<3600)return Math.floor(s/60)+'분 전';
+    if(s<86400)return Math.floor(s/3600)+'시간 전';
+    if(s<2592000)return Math.floor(s/86400)+'일 전';
+    if(s<31536000)return Math.floor(s/2592000)+'개월 전';
+    return Math.floor(s/31536000)+'년 전';
+  }
+
+  // Nitro 타입
+  function nitroType(t){
+    var m={0:'없음',1:'Nitro Classic',2:'Nitro',3:'Nitro Basic'};
+    return m[t]||('알 수 없음 ('+t+')');
+  }
+  // 인증 배지
+  function badgeFlags(f){
+    if(!f)return[];
+    var b=[];
+    if(f&1)b.push('Discord Staff');
+    if(f&2)b.push('Partner');
+    if(f&4)b.push('HypeSquad Events');
+    if(f&8)b.push('Bug Hunter Lv1');
+    if(f&64)b.push('HypeSquad Bravery');
+    if(f&128)b.push('HypeSquad Brilliance');
+    if(f&256)b.push('HypeSquad Balance');
+    if(f&512)b.push('Early Supporter');
+    if(f&16384)b.push('Bug Hunter Lv2');
+    if(f&131072)b.push('Early Verified Bot Dev');
+    if(f&262144)b.push('Certified Moderator');
+    if(f&4194304)b.push('Active Developer');
+    return b;
+  }
+  // 유저 플래그 (프로필 배지)
+  function userFlags(p){
+    if(!p)return[];
+    var b=[];
+    if(p.staff)b.push('Staff');
+    if(p.partner)b.push('Partner');
+    if(p.hypesquad)b.push('HypeSquad');
+    if(p.bug_hunter)b.push('Bug Hunter');
+    if(p.early_supporter)b.push('Early Supporter');
+    if(p.verified_developer)b.push('Verified Dev');
+    if(p.active_developer)b.push('Active Dev');
+    if(p.early_verified_bot_developer)b.push('Early Bot Dev');
+    return b;
+  }
+
+  function upStat(){
+    $('cV').textContent=buck.valid.length;
+    $('cL').textContent=buck.locked.length;
+    $('cI').textContent=buck.invalid.length;
+    cp.v.disabled=!buck.valid.length;
+    cp.l.disabled=!buck.locked.length;
+    cp.i.disabled=!buck.invalid.length;
+  }
+  function reset(){buck.valid=[];buck.locked=[];buck.invalid=[];items=[];upStat()}
+
+  function mkEl(tok){
+    var e=res.querySelector('.empty');
+    if(e)e.remove();
+    var d=document.createElement('div');
+    d.className='item checking';
+    d.dataset.s='checking';
+    d.innerHTML='<div class="ir"><div class="av">?</div><div class="inf"><div class="nm">검사 중...</div><div class="dt">'+esc(mask(tok))+'</div></div><div class="spin"></div></div>';
+    res.appendChild(d);
+    return d;
+  }
+
+  // 상세정보 HTML 생성
+  function buildDetail(u,extra){
+    extra=extra||{};
+    var created=snowflakeToDate(u.id);
+    var flags=badgeFlags(u.public_flags);
+    var uf=userFlags(u.user_flags);
+    var rows=[];
+
+    rows.push(['User ID', '<span class="hl">'+esc(u.id)+'</span>']);
+    rows.push(['Username', esc(u.username)]);
+    rows.push(['Display Name', esc(u.global_name||u.username)]);
+    rows.push(['Discriminator', u.discriminator&&u.discriminator!=='0'?'#'+esc(u.discriminator):'<span style="color:#8a8d94">(신규 시스템)</span>']);
+    rows.push(['Account Type', u.bot?'🤖 Bot':'👤 User']);
+    rows.push(['Email', u.email?esc(u.email):'<span class="no">없음</span>']);
+    rows.push(['Email Verified', u.verified?'<span class="ok">✅ 인증됨</span>':'<span class="no">❌ 미인증</span>']);
+    rows.push(['Phone', u.phone?esc(u.phone):'<span style="color:#8a8d94">없음</span>']);
+    rows.push(['2FA Enabled', u.mfa_enabled?'<span class="ok">🔐 활성화</span>':'<span style="color:#8a8d94">비활성</span>']);
+    rows.push(['Nitro', u.premium_type?'<span class="ni">✨ '+nitroType(u.premium_type)+'</span>':'<span style="color:#8a8d94">없음</span>']);
+    if(u.premium_type)rows.push(['Nitro Since', u.premium_since?fmtDate(new Date(u.premium_since)):'N/A']);
+    rows.push(['Locale', esc(u.locale||'N/A')]);
+    rows.push(['NSFW Allowed', u.nsfw_allowed?'✅ 허용':'❌ 차단']);
+    rows.push(['Account Created', '<span class="hl">'+fmtDate(created)+'</span> <span style="color:#8a8d94">('+timeAgo(created)+')</span>']);
+    rows.push(['Avatar Hash', u.avatar?esc(u.avatar):'<span style="color:#8a8d94">기본 아바타</span>']);
+    if(u.banner)rows.push(['Banner Hash', esc(u.banner)]);
+    rows.push(['Accent Color', u.accent_color!=null?'#'+u.accent_color.toString(16).padStart(6,'0'):'N/A']);
+    rows.push(['Public Flags', flags.length?'<span class="hl">'+flags.join(', ')+'</span>':'<span style="color:#8a8d94">없음</span>']);
+    rows.push(['Profile Badges', uf.length?uf.join(', '):'<span style="color:#8a8d94">없음</span>']);
+
+    // 상세 프로필 (bio, pronouns 등) - 별도 요청 결과
+    if(extra.bio!=null)rows.push(['소개글 (Bio)', extra.bio?esc(extra.bio):'<span style="color:#8a8d94">없음</span>']);
+    if(extra.pronouns!=null)rows.push(['대명사 (Pronouns)', extra.pronouns?esc(extra.pronouns):'<span style="color:#8a8d94">없음</span>']);
+    if(extra.connected&&extra.connected.length)rows.push(['연결된 계정', extra.connected.map(function(c){return c.type+': '+c.name}).join('<br>')]);
+
+    var html='<div class="dgrid">';
+    rows.forEach(function(r){
+      html+='<div class="drow"><div class="k">'+r[0]+'</div><div class="v">'+r[1]+'</div></div>';
+    });
+    html+='</div>';
+    return html;
+  }
+
+  function renderV(el,u,extra){
+    el.className='item valid';el.dataset.s='valid';
+    var nm=u.global_name||u.username||'Unknown';
+    var init=(nm[0]||'?').toUpperCase();
+    var av=u.avatar?'https://cdn.discordapp.com/avatars/'+u.id+'/'+u.avatar+(u.avatar.indexOf('a_')===0?'.gif':'.png')+'?size=80':null;
+    var bdg='';
+    if(u.bot)bdg+='<span class="bdg bot">BOT</span>';
+    if(u.premium_type)bdg+='<span class="bdg nitro">NITRO</span>';
+    if(u.public_flags&&(u.public_flags&1))bdg+='<span class="bdg staff">STAFF</span>';
+    if(u.public_flags&&(u.public_flags&512))bdg+='<span class="bdg early">EARLY</span>';
+
+    var created=snowflakeToDate(u.id);
+
+    el.innerHTML=
+      '<div class="ir">'+
+        '<div class="av"'+(av?' style="background-image:url(\''+av+'\')"':'')+'>'+(av?'':esc(init))+'</div>'+
+        '<div class="inf">'+
+          '<div class="nm">'+esc(nm)+' <span style="color:#a3a6ad;font-weight:500;font-size:12px">@'+esc(u.username)+'</span>'+bdg+'</div>'+
+          '<div class="dt">ID: '+esc(u.id)+' · 생성: '+fmtDate(created)+'</div>'+
+        '</div>'+
+        '<div class="si">✅</div>'+
+      '</div>'+
+      '<button class="toggle">▶ 상세정보 보기</button>'+
+      '<div class="detail">'+buildDetail(u,extra)+'</div>';
+
+    var tg=el.querySelector('.toggle');
+    var dt=el.querySelector('.detail');
+    tg.addEventListener('click',function(){
+      dt.classList.toggle('on');
+      tg.textContent=dt.classList.contains('on')?'▼ 상세정보 접기':'▶ 상세정보 보기';
+    });
+  }
+
+  function renderL(el,tok,why){
+    el.className='item locked';el.dataset.s='locked';
+    el.innerHTML='<div class="ir"><div class="av" style="background:rgba(240,178,50,.15);color:#f0b232">🔒</div>'+
+      '<div class="inf"><div class="nm" style="color:#f0b232">잠긴 계정</div>'+
+      '<div class="dt">'+esc(mask(tok))+' · '+esc(why)+'</div></div><div class="si">🔒</div></div>';
+  }
+  function renderI(el,tok,why){
+    el.className='item invalid';el.dataset.s='invalid';
+    el.innerHTML='<div class="ir"><div class="av" style="background:rgba(237,66,69,.15);color:#ed4245">✕</div>'+
+      '<div class="inf"><div class="nm" style="color:#ed4245">무효한 토큰</div>'+
+      '<div class="dt">'+esc(mask(tok))+' · '+esc(why)+'</div></div><div class="si">❌</div></div>';
+  }
+
+  // 상세 프로필 (bio, pronouns, connected accounts) 별도 요청
+  async function fetchExtra(tok){
+    var extra={};
+    try{
+      var r=await fetch(API+'/users/@me/profile',{
+        headers:{'Authorization':tok},
+        cache:'no-store'
+      });
+      if(r.status===200){
+        var d=await r.json();
+        if(d.user_profile){
+          extra.bio=d.user_profile.bio||'';
+          extra.pronouns=d.user_profile.pronouns||'';
+          if(d.user_profile.connected_accounts){
+            extra.connected=d.user_profile.connected_accounts.map(function(c){
+              return {type:c.type,name:c.name||c.id};
+            });
+          }
+        }
+      }
+    }catch(e){}
+    // 폴백: /users/@me 에는 bio 없음. bio 비어있으면 user_profile에서 한 번 더 시도
+    if(extra.bio==null){
+      try{
+        var r2=await fetch(API+'/users/@me',{
+          headers:{'Authorization':tok},
+          cache:'no-store'
+        });
+        // 일부 응답에 user_profile 필드가 함께 오는 경우
+        if(r2.status===200){
+          var d2=await r2.json();
+          if(d2.user_profile){
+            extra.bio=d2.user_profile.bio||'';
+            extra.pronouns=d2.user_profile.pronouns||'';
+          }
+        }
+      }catch(e){}
+    }
+    return extra;
+  }
+
+  async function check(tok,el){
+    try{
+      var r=await fetch(API+'/users/@me',{
+        headers:{'Authorization':tok},
+        cache:'no-store'
+      });
+      if(r.status===200){
+        var u=await r.json();
+        var extra=await fetchExtra(tok);
+        renderV(el,u,extra);
+        buck.valid.push(tok);
+        items.push({s:'valid',el:el});
+      }else if(r.status===401){
+        var why='Unauthorized (401)',lock=false;
+        try{
+          var d=await r.json();
+          if(d&&d.message)why=d.message;
+          if(d&&d.captcha_key)lock=true;
+          if(d&&d.message&&/locked|verify|phone|flag/i.test(d.message))lock=true;
+        }catch(e){}
+        if(lock){renderL(el,tok,why);buck.locked.push(tok);items.push({s:'locked',el:el})}
+        else{renderI(el,tok,why);buck.invalid.push(tok);items.push({s:'invalid',el:el})}
+      }else if(r.status===403){
+        var w2='Forbidden (403) · 전화번호 인증 필요';
+        try{var d2=await r.json();if(d2&&d2.message)w2=d2.message}catch(e){}
+        renderL(el,tok,w2);buck.locked.push(tok);items.push({s:'locked',el:el});
+      }else if(r.status===429){
+        renderI(el,tok,'Rate Limited (429)');buck.invalid.push(tok);items.push({s:'invalid',el:el});
+      }else if(r.status>=500){
+        renderI(el,tok,'서버 오류 ('+r.status+')');buck.invalid.push(tok);items.push({s:'invalid',el:el});
+      }else{
+        renderI(el,tok,'HTTP '+r.status);buck.invalid.push(tok);items.push({s:'invalid',el:el});
+      }
+    }catch(err){
+      renderI(el,tok,'네트워크 오류: '+err.message);buck.invalid.push(tok);items.push({s:'invalid',el:el});
+    }
+    upStat();
+  }
+
+  async function start(){
+    if(busy)return;
+    var raw=inp.value.split('\n').map(function(t){return t.trim()}).filter(function(t){return t});
+    var seen={},uniq=[];
+    raw.forEach(function(t){if(!seen[t]){seen[t]=1;uniq.push(t)}});
+    if(!uniq.length){toast('토큰을 입력하세요','err');return}
+    busy=true;btn.disabled=true;btn.innerHTML='⏳ 검사 중...';clr.disabled=true;
+    res.innerHTML='';reset();applyF(filter);
+    prog.classList.add('on');pf.style.width='0%';
+    for(var i=0;i<uniq.length;i++){
+      var el=mkEl(uniq[i]);visItem(el);
+      await check(uniq[i],el);
+      pf.style.width=((i+1)/uniq.length*100)+'%';
+      if(i<uniq.length-1)await sleep(DELAY);
+    }
+    await sleep(300);
+    prog.classList.remove('on');pf.style.width='0%';
+    busy=false;btn.disabled=false;btn.innerHTML='▶ 검사 시작';clr.disabled=false;
+    toast('검사 완료 · 총 '+(buck.valid.length+buck.locked.length+buck.invalid.length)+'개','ok');
+  }
+
+  function applyF(f){
+    filter=f;
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.f===f)});
+    items.forEach(function(it){visItem(it.el)});
+  }
+  function visItem(el){
+    var s=el.dataset.s;
+    el.style.display=(filter==='all'||s===filter||s==='checking')?'':'none';
+  }
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){applyF(t.dataset.f)});
+  });
+
+  function fbCopy(txt){
+    var ta=document.createElement('textarea');
+    ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy')}catch(e){}
+    document.body.removeChild(ta);
+  }
+  function copyTxt(txt,btn,label){
+    if(!txt){toast('복사할 토큰이 없습니다','err');return}
+    var done=function(){
+      var orig=btn.innerHTML;
+      btn.classList.add('done');
+      btn.innerHTML='✅ '+label+' 복사됨!';
+      toast(label+' '+txt.split('\n').length+'개 복사됨','ok');
+      setTimeout(function(){btn.classList.remove('done');btn.innerHTML=orig},1500);
+    };
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done).catch(function(){fbCopy(txt);done()});
+    }else{fbCopy(txt);done()}
+  }
+  cp.v.addEventListener('click',function(){copyTxt(buck.valid.join('\n'),cp.v,'유효 토큰')});
+  cp.l.addEventListener('click',function(){copyTxt(buck.locked.join('\n'),cp.l,'잠긴 토큰')});
+  cp.i.addEventListener('click',function(){copyTxt(buck.invalid.join('\n'),cp.i,'무효 토큰')});
+
+  btn.addEventListener('click',start);
+  clr.addEventListener('click',function(){
+    if(busy)return;
+    inp.value='';
+    res.innerHTML='<div class="empty"><div class="ic">📭</div><div>아직 검사한 토큰이 없습니다</div></div>';
+    reset();
+    toast('초기화되었습니다','ok');
+  });
+  inp.addEventListener('keydown',function(e){
+    if(e.ctrlKey&&e.key==='Enter')start();
+  });
+})();
+</script>
+</body>
+</html>
